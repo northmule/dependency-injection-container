@@ -2,7 +2,8 @@
     "name": "northmule/dependency-injection-container",
     "description": "Symfony-based dependency container for Laminas projects ",
     "keywords": ["Laminas","Symfony","DI","dependency-injection"],
-    "type": "project",
+    "type": "library",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "Djo",
