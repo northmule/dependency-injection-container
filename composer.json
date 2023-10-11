@@ -1,0 +1,23 @@
+{
+    "name": "northmule/dependency-injection-container",
+    "description": "Symfony-based dependency container for Laminas projects ",
+    "keywords": ["Laminas","Symfony","DI","dependency-injection"],
+    "type": "project",
+    "authors": [
+        {
+            "name": "Djo",
+            "email": "izm@zixn.ru",
+            "homepage": "https://github.com/northmule/dependency-injection-container",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "symfony/dependency-injection": "^6.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Northmule\\Container\\": "src"
+        }
+    }
+}
