@@ -6,8 +6,6 @@ namespace Northmule\Container;
 
 use Northmule\Container\Exception\InvalidServiceException;
 use Northmule\Container\Exception\ServiceNotFoundException;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 use Psr\Container\ContainerInterface;
 
 use function sprintf;
@@ -25,12 +23,12 @@ use function is_callable;
  *
  * @package Northmule\Container
  */
-class ContainerUnit implements
-    ContainerInterface,
-    ContainerAwareInterface
+class ContainerUnit implements ContainerInterface, ContainerAwareInterface
 {
-    /** @var ContainerBuilder */
-    protected ContainerBuilder $containerUnit;
+    use DependenciesTrait;
+    
+    /** @var Builder */
+    protected Builder $containerUnit;
     /** @var ContainerInterface */
     protected ContainerInterface $container;
     /** @var string */
@@ -39,7 +37,7 @@ class ContainerUnit implements
     /**
      * ContainerUnit constructor.
      *
-     * @param array<string,string> $config
+     * @param array{"dependencies":array} $config
      * @param ContainerInterface   $container
      * @param string               $instanceOf
      */
@@ -48,9 +46,10 @@ class ContainerUnit implements
         ContainerInterface $container,
         string $instanceOf
     ) {
+        $this->containerId = static::class;
         $this->container = $container;
         $this->instanceOf = $instanceOf;
-        $this->containerUnit = new ContainerBuilder();
+        $this->containerUnit = new Builder();
         $this->configure($this->containerUnit, $config);
     }
 
@@ -158,64 +157,19 @@ class ContainerUnit implements
     /**
      * Configure service
      *
-     * @param ContainerBuilder $builder
-     * @param array            $config
+     * @param Builder $builder
+     * @param array{"dependencies":array} $config
+     *
      * @return void
      */
-    private function configure(ContainerBuilder $builder, array $config): void
+    private function configure(Builder $builder, array $config): void
     {
-        $builder->set('config', new \ArrayObject($config, \ArrayObject::ARRAY_AS_PROPS));
+        $builder->set(ConfigKeys::CONFIG->value, new \ArrayObject($config, \ArrayObject::ARRAY_AS_PROPS));
         $builder->set(static::class, $this);
-        $builder->register(static::class, static::class)->setLazy(true)->setPublic(true);
-        $dependencies = $config['dependencies'];
-        foreach ($dependencies as $type => $services) {
-            if ($type === Keys::SERVICES->value) {
-                foreach ($services as $name => $service) {
-                    $builder->set($name, $service);
-                }
-            }
-            if ($type === Keys::INVOKABLES->value) {
-                foreach ($services as $name => $service) {
-                    $builder->register($name, $service)->setLazy(true)->setPublic(true);
-                }
-            }
-            if ($type === Keys::FACTORIES->value) {
-                foreach ($services as $name => $service) {
-                    $class = is_string($service) ? $service : $name;
-                    $definition = $builder->register($name, $class);
-                    $definition->setLazy(true);
-                    $definition->setPublic(true);
-                    $definition->setArguments([new Reference(static::class), $name]);
-                    if (
-                        is_string($service) && class_exists($service)
-                        && method_exists($service, '__invoke')
-                    ) {
-                        $definition->setFactory(new Reference($service));
-                        $builder->set($service, new $service());
-                        continue;
-                    }
-                    if (is_array($service) && count($service) == 2 && is_callable($service)) {
-                        if (class_exists($service[0])) {
-                            $definition->setFactory($service);
-                            continue;
-                        }
-                    }
-                    if (!is_string($service)) {
-                        throw InvalidServiceException::unsupportedType($class, $service);
-                    }
-                }
-            }
-            if ($type === Keys::ALIASES->value) {
-                foreach ($services as $name => $service) {
-                    $builder->setAlias($name, $service)->setPublic(true);
-                }
-            }
-            if ($type === Keys::AUTO->value) {
-                foreach ($services as $service) {
-                    $builder->autowire($service, $service)->setLazy(true)->setPublic(true);
-                }
-            }
-        }
+        $builder->register(static::class, static::class)
+            ->setLazy(true)
+            ->setPublic(true);
+        $this->configureDependencies($builder, $config[ConfigKeys::DEPENDENCIES->value]);
         $builder->compile();
     }
 }
