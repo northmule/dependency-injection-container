@@ -117,7 +117,7 @@ class ConfigProvider
      */
     public function __invoke(): array
     {
-        return [
+        return [ // The key of the array that is used when creating a container with dependencies
             'dependencies' => $this->getDependencies(),
         ];
     }
@@ -142,6 +142,15 @@ class ConfigProvider
             // Setup based on a previously created factory
                 Example::class  => ExampleFactory::class,
             ],
+            // Each time the container is accessed, a new instance will be returned for these classes
+            'no_share' => [
+                    Example12::class,
+            ],     
+            // Instead of the original object, a proxy object will be returned from the container that behaves the
+            // same as the original one, but is initialized after the first access to its methods.
+             'lazy' => [
+                  Example12::class,
+            ],     
         ];
     }
 }
@@ -170,5 +179,10 @@ $container = require 'config/container.php';
 /**
 * Here is the logic of your application/script. From the container you can get all the configured objects specified in the files ConfigProvider.php
  */
+ 
+// Get Object/Proxy object
+$object = $container->get(Example12::class);
+// Always get the original object (not a proxy)
+$object = $container->getOriginObject(Example12::class);
 
 ```
