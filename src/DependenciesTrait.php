@@ -91,7 +91,7 @@ trait DependenciesTrait
                 $builder->register($service, $service);
                 continue;
             }
-            $builder->register($name, $service);
+            $builder->register($name, $service)->setPublic(true);
         }
     }
     
@@ -138,7 +138,7 @@ trait DependenciesTrait
     private function buildAliases(Builder $builder, array $services): void
     {
         foreach ($services as $name => $service) {
-            $builder->setAlias($name, $service);
+            $builder->setAlias($name, $service)->setPublic(true);
         }
     }
     
@@ -152,6 +152,7 @@ trait DependenciesTrait
     {
         foreach ($services as $service) {
             $builder->autowire($service);
+            $builder->getDefinition($service)->setPublic(true);
         }
     }
 }
