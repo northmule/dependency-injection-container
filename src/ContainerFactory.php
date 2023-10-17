@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Northmule\Container;
 
 use ArrayObject;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 
 /**
@@ -20,9 +21,9 @@ class ContainerFactory
      * Create container
      *
      * @param array $config
-     * @return Builder
+     * @return ContainerBuilder
      */
-    public function __invoke(array $config): Builder
+    public function __invoke(array $config): ContainerBuilder
     {
         $this->containerId = 'service_container';
         $builder = new Builder();

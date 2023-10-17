@@ -8,20 +8,19 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\VarExporter\LazyProxyTrait;
 
-use function strlen;
-use function strpos;
-use function get_class;
+use function class_implements;
+use function is_array;
 
 /**
  * Class Builder
  *
  * @package Northmule\Container
  */
-final class Builder extends ContainerBuilder
+class Builder extends ContainerBuilder
 {
     
     /**
-     * Returns the original object of the requested class
+     * Returns the proxy class containing the original object
      *
      * @template T
      * @param class-string<T> $id
@@ -32,30 +31,28 @@ final class Builder extends ContainerBuilder
      */
     public function get(string $id, int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): ?object
     {
+        return parent::get($id);
+       
+    }
+    
+    /**
+     *
+     * Returns the original object of the requested class
+     * @template T
+     * @param class-string<T> $id
+     *
+     * @return T
+     * @throws \Exception
+     */
+    public function getOriginObject(string $id, int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): ?object
+    {
         /** @var LazyProxyTrait $service */
         $service =  parent::get($id, $invalidBehavior);
-        $serviceClass = get_class($service);
-        // @see \Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\LazyServiceDumper::getProxyClass()
-        if (strlen($serviceClass) > 12 &&
-            (strpos($serviceClass, 'Proxy', -12) !== false
-                || strpos($serviceClass, 'Ghost', -12) !== false)
-        ) {
+        $implementClass = class_implements($service);
+        if (is_array($implementClass)
+            && array_key_exists('Symfony\Component\VarExporter\LazyObjectInterface', $implementClass)) {
             return $service->initializeLazyObject();
         }
         return $service;
     }
-    
-    /**
-     * Returns the proxy class containing the original object
-     *
-     * @param string $id
-     *
-     * @return LazyProxyTrait|object
-     * @throws \Exception
-     */
-    public function getLazyObject(string $id): ?object
-    {
-        return parent::get($id);
-    }
-    
 }
