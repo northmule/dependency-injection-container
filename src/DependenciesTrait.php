@@ -88,7 +88,7 @@ trait DependenciesTrait
     {
         foreach ($services as $name => $service) {
             if (is_numeric($name)) {
-                $builder->register($service, $service);
+                $builder->register($service, $service)->setPublic(true);
                 continue;
             }
             $builder->register($name, $service)->setPublic(true);
